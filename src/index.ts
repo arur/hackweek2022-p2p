@@ -1,6 +1,14 @@
+import path from "path";
+import { WebTorrentService } from "./WebTorrentService";
+
 const run = () => {
-  console.log('HELLO');
+  const p = path.join(__dirname, '..', 'assets', 'editor.txt')
+  console.log(p);
+
+  const webTorrent  = new WebTorrentService();
+  webTorrent.init();
+
+  webTorrent.seed(p);
+
 }
 run();
-
-export {}
