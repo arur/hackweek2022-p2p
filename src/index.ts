@@ -1,5 +1,5 @@
 import repl, {REPLEval} from 'node:repl';
-import {Command} from 'commander';
+import {Command, CommanderError} from 'commander';
 import {torrentService} from './WebTorrentService.js';
 
 const program = new Command();
@@ -34,9 +34,15 @@ program
 const run = async (input: string) => {
   try {
     await program.parseAsync(input.split(' '), {from: 'user'});
-  } catch (e) {
-    //
-    console.log(e);
+  } catch (err) {
+    if (
+      err instanceof CommanderError &&
+      err.code != 'commander.help' &&
+      err.code != 'commander.missingArgument' &&
+      err.code != 'commander.helpDisplayed'
+    ) {
+      console.log(err);
+    }
   }
 };
 
