@@ -1,32 +1,50 @@
-import WebTorrent from "webtorrent";
+import WebTorrent from 'webtorrent';
 
-export class WebTorrentService {
-  private client: WebTorrent.Instance;
+type SeedInput =
+  | string
+  | string[]
+  | File
+  | File[]
+  | FileList
+  | Buffer
+  | Buffer[]
+  | NodeJS.ReadableStream
+  | NodeJS.ReadableStream[];
 
-  constructor () {
-    this.client = new WebTorrent();
-  }
+const createWebTorrentService = () => {
+  const client: WebTorrent.Instance = new WebTorrent();
 
-  init() {
-    this.client.on('torrent', (torrent: WebTorrent.Torrent) => {
-      console.log('on.torrent', torrent.name, torrent.infoHash)
-    })
-    
-    this.client.on('error', (err) => {
-      console.log(err)
-    })
-  }
-  
-  seed(input: string | string[] | File | File[] | FileList | Buffer | Buffer[] | NodeJS.ReadableStream | NodeJS.ReadableStream[]) {
-    this.client.seed(input, {}, (torrent: WebTorrent.Torrent) => {
-      console.log('seed',torrent.name)
-    })
-  }
+  // init() {
+  //   this.client.on('torrent', (torrent: WebTorrent.Torrent) => {
+  //     console.log('on.torrent', torrent.name, torrent.infoHash);
+  //   });
 
-  destroy () {
-    this.client.destroy((e) => {
-      console.log('destroy', e)
+  //   this.client.on('error', err => {
+  //     console.log(err);
+  //   });
+  // }
+
+  const getTorrents = () => {
+    return client.torrents;
+  };
+
+  const seed = (input: SeedInput) => {
+    client.seed(input, {}, (torrent: WebTorrent.Torrent) => {
+      console.log('seed', torrent.name);
     });
-  }
+  };
 
-}
+  const destroy = () => {
+    client.destroy(e => {
+      console.log('destroy', e);
+    });
+  };
+
+  return {
+    getTorrents,
+    seed,
+    destroy,
+  };
+};
+
+export const torrentService = createWebTorrentService();

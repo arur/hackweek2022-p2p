@@ -1,14 +1,49 @@
-import path from "path";
-import { WebTorrentService } from "./WebTorrentService";
+import repl, {REPLEval} from 'node:repl';
+import {Command} from 'commander';
+import {torrentService} from './WebTorrentService.js';
 
-const run = () => {
-  const p = path.join(__dirname, '..', 'assets', 'editor.txt')
-  console.log(p);
+const program = new Command();
+program.exitOverride();
+program.showHelpAfterError();
 
-  const webTorrent  = new WebTorrentService();
-  webTorrent.init();
+program
+  .command('list')
+  .description('Get an array of all torrents in the client.')
+  .action(() => {
+    console.log(torrentService.getTorrents());
+  });
 
-  webTorrent.seed(p);
+program
+  .command('exit')
+  .description('Exit the application.')
+  .action(() => {
+    torrentService.destroy();
+    process.exit();
+  });
 
-}
-run();
+program
+  .command('add')
+  .description('Start seeding a new torrent.')
+  .argument('<file>', 'filesystem path to file or folder')
+  .action((file: string) => {
+    // torrentService.seed('editor.txt');
+    console.log(process.cwd());
+    console.log(file);
+  });
+
+const run = async (input: string) => {
+  try {
+    await program.parseAsync(input.split(' '), {from: 'user'});
+  } catch (e) {
+    //
+    console.log(e);
+  }
+};
+
+const customEval: REPLEval = async (uInput, context, filename, callback) => {
+  callback(null, await run(uInput.trim()));
+};
+
+console.log('Enter command\n');
+
+repl.start({prompt: '🚀 ', eval: customEval});
