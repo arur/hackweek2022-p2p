@@ -3,6 +3,7 @@ import { Command, CommanderError } from 'commander';
 import { torrentService } from './WebTorrentService.js';
 import path from 'node:path';
 import WebTorrent from 'webtorrent';
+import cliProgress from 'cli-progress';
 
 type TorrentInfo = Pick<
   WebTorrent.Torrent,
@@ -70,8 +71,26 @@ program
   .command('add')
   .description('Add a new torrent to be downloaded.')
   .argument('<torrentId>', 'magnet link or info hash')
-  .action((torrentId: string) => {
-    torrentService.add(torrentId);
+  .action(async(torrentId: string) => {
+    const returned = torrentService.add(torrentId);
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar.start(1,0)
+
+    const asyncInterval = new Promise<void>((resolve) => {
+      const timer = setInterval(() => {
+        const torrents = torrentService.getTorrents();
+        var torrentInfo = torrents.map<TorrentInfo>(mapToInfo);
+        bar.update(torrentInfo[0].progress)
+        if (torrentInfo[0].progress == 1) {
+          bar.stop()
+          resolve();
+          clearInterval(timer)
+        }
+      }, 2000)  
+    })
+
+    await asyncInterval
+
   });
 
 const run = async (input: string) => {
