@@ -1,4 +1,5 @@
-import WebTorrent from 'webtorrent';
+// @ts-nocheck
+import WebTorrent from 'webtorrent-hybrid';
 
 type SeedInput =
   | string

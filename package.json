@@ -26,6 +26,7 @@
     "commander": "^9.4.0",
     "inquirer": "^9.1.1",
     "prettier": "^2.7.1",
-    "webtorrent": "^1.8.30"
+    "webtorrent": "^1.8.30",
+    "webtorrent-hybrid": "^5.0.2"
   }
 }
