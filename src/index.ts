@@ -1,26 +1,20 @@
+import path from 'node:path';
 import repl, { REPLEval } from 'node:repl';
 import { Command, CommanderError } from 'commander';
 import { torrentService } from './WebTorrentService.js';
-import path from 'node:path';
-import WebTorrent from 'webtorrent';
+import { formatTorrent, formatTorrents } from './format.utils.js';
 
-type TorrentInfo = Pick<
-  WebTorrent.Torrent,
-  'name' | 'infoHash' | 'magnetURI' | 'timeRemaining' | 'progress'
->;
+import type { Torrent } from 'webtorrent';
+import type { TorrentInfo } from './types.js';
 
 const mapToInfo = ({
   name,
   infoHash,
   magnetURI,
-  timeRemaining,
-  progress,
-}: WebTorrent.Torrent): TorrentInfo => ({
+}: Torrent): Partial<TorrentInfo> => ({
   name,
   infoHash,
   magnetURI,
-  timeRemaining,
-  progress,
 });
 
 const program = new Command();
@@ -32,8 +26,7 @@ program
   .description('Get an array of all torrents in the client.')
   .action(() => {
     const torrents = torrentService.getTorrents();
-    const torrentInfo = torrents.map<TorrentInfo>(mapToInfo);
-    console.log(torrentInfo);
+    console.log('\n' + formatTorrents(torrents) + '\n');
   });
 
 program
@@ -43,10 +36,25 @@ program
   .action((torrentId: string) => {
     const torrent = torrentService.getTorrent(torrentId);
     if (torrent) {
-      console.log(mapToInfo(torrent));
+      console.log('\n' + formatTorrent(torrent) + '\n');
+
       return;
     }
-    console.log(`No torrent fount with ${torrentId} hash`);
+    console.log(`No torrent found with ${torrentId} hash`);
+  });
+
+program
+  .command('gml')
+  .description('Get the magnet link of the torrent.')
+  .argument('<torrentId>', 'torrent hash')
+  .action((torrentId: string) => {
+    const torrent = torrentService.getTorrent(torrentId);
+    if (torrent) {
+      console.log(torrent.magnetURI);
+
+      return;
+    }
+    console.log(`No torrent found with ${torrentId} hash`);
   });
 
 program
@@ -62,6 +70,8 @@ program
   .description('Start seeding a new torrent.')
   .argument('<fileName>', 'filesystem path to file or folder')
   .action((fileName: string) => {
+    console.log('Preparing file for seeding...');
+
     const filePath = path.join(process.cwd(), 'assets', fileName);
     torrentService.seed(filePath);
   });
