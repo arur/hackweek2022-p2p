@@ -1,6 +1,6 @@
 module.exports = {
   arrowParens: 'avoid',
-  bracketSpacing: false,
+  bracketSpacing: true,
   embeddedLanguageFormatting: 'auto',
   endOfLine: 'lf',
   htmlWhitespaceSensitivity: 'css',
@@ -16,4 +16,4 @@ module.exports = {
   tabWidth: 2,
   trailingComma: 'all',
   useTabs: false,
-}
+};
