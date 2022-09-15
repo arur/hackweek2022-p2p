@@ -1,6 +1,6 @@
 export interface TorrentInfo {
   infoHash: string;
-  created: string;
+  created?: string;
   name: string;
   filesCount: string;
   ready: string;

@@ -28,7 +28,9 @@ export const infoToString = ({
   magnetURI,
 }: Torrent): TorrentInfo => ({
   infoHash,
-  created: dateFormatter.format(new Date(created)).replace(',', ''),
+  created: created
+    ? dateFormatter.format(new Date(created)).replace(',', '')
+    : undefined,
   name,
   filesCount: String(files.length),
   ready: ready ? '✅' : ' ',
@@ -48,7 +50,9 @@ export const formatTorrentInfoLine = (
       ? `${name.slice(0, nameColumnLength - 1)}${ELLIPSIS}`
       : name;
 
-  return `${infoHash}  ${created}  ${filesCount.padStart(
+  const createdString = created ? created : ' '.repeat(12);
+
+  return `${infoHash}  ${createdString}  ${filesCount.padStart(
     5,
     ' ',
   )}  ${ready.padEnd(5, ' ')} ${done.padEnd(5, ' ')} ${torrentName}`;
@@ -76,13 +80,9 @@ export const formatTorrents = (torrents: Torrent[]) => {
   const torrentInfoList = torrents.map(infoToString);
   const maxNameLength = getLongestName(torrentInfoList);
 
-  const output =
+  return (
     formatTorrentInfoHeader() +
     '\n' +
-    torrentInfoList
-      .map(t => formatTorrentInfoLine(t, maxNameLength))
-      .join('\n');
-
-  // remove last new line
-  return output.slice(0, -1);
+    torrentInfoList.map(t => formatTorrentInfoLine(t, maxNameLength)).join('\n')
+  );
 };

@@ -5,16 +5,17 @@ import { torrentService } from './WebTorrentService.js';
 import { formatTorrent, formatTorrents } from './format.utils.js';
 
 import type { Torrent } from 'webtorrent';
-import type { TorrentInfo } from './types.js';
 
 const mapToInfo = ({
   name,
   infoHash,
   magnetURI,
-}: Torrent): Partial<TorrentInfo> => ({
+  created,
+}: Torrent): Partial<Torrent> => ({
   name,
   infoHash,
   magnetURI,
+  created,
 });
 
 const program = new Command();
@@ -96,7 +97,9 @@ const run = async (input: string) => {
       err.code != 'commander.unknownCommand'
     ) {
       console.log(err);
+      return;
     }
+    console.log(err);
   }
 };
 
