@@ -6,17 +6,19 @@ import { formatTorrent, formatTorrents } from './format.utils.js';
 import cliProgress from 'cli-progress';
 
 import type { Torrent } from 'webtorrent';
-import type { TorrentInfo } from './types.js';
+import { TorrentInfo } from './types.js';
 
 const mapToInfo = ({
   name,
   infoHash,
   magnetURI,
+  created,
   progress
-}: Torrent): Partial<TorrentInfo> => ({
+}: Torrent): Partial<Torrent> => ({
   name,
   infoHash,
   magnetURI,
+  created,
   progress
 });
 
@@ -116,7 +118,9 @@ const run = async (input: string) => {
       err.code != 'commander.unknownCommand'
     ) {
       console.log(err);
+      return;
     }
+    console.log(err);
   }
 };
 
