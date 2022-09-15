@@ -1,27 +1,23 @@
+import path from 'node:path';
 import repl, { REPLEval } from 'node:repl';
 import { Command, CommanderError } from 'commander';
 import { torrentService } from './WebTorrentService.js';
-import path from 'node:path';
-import WebTorrent from 'webtorrent';
+import { formatTorrent, formatTorrents } from './format.utils.js';
 import cliProgress from 'cli-progress';
 
-type TorrentInfo = Pick<
-  WebTorrent.Torrent,
-  'name' | 'infoHash' | 'magnetURI' | 'timeRemaining' | 'progress'
->;
+import type { Torrent } from 'webtorrent';
+import type { TorrentInfo } from './types.js';
 
 const mapToInfo = ({
   name,
   infoHash,
   magnetURI,
-  timeRemaining,
-  progress,
-}: WebTorrent.Torrent): TorrentInfo => ({
+  progress
+}: Torrent): Partial<TorrentInfo> => ({
   name,
   infoHash,
   magnetURI,
-  timeRemaining,
-  progress,
+  progress
 });
 
 const program = new Command();
@@ -33,8 +29,7 @@ program
   .description('Get an array of all torrents in the client.')
   .action(() => {
     const torrents = torrentService.getTorrents();
-    const torrentInfo = torrents.map<TorrentInfo>(mapToInfo);
-    console.log(torrentInfo);
+    console.log('\n' + formatTorrents(torrents) + '\n');
   });
 
 program
@@ -44,10 +39,25 @@ program
   .action((torrentId: string) => {
     const torrent = torrentService.getTorrent(torrentId);
     if (torrent) {
-      console.log(mapToInfo(torrent));
+      console.log('\n' + formatTorrent(torrent) + '\n');
+
       return;
     }
-    console.log(`No torrent fount with ${torrentId} hash`);
+    console.log(`No torrent found with ${torrentId} hash`);
+  });
+
+program
+  .command('gml')
+  .description('Get the magnet link of the torrent.')
+  .argument('<torrentId>', 'torrent hash')
+  .action((torrentId: string) => {
+    const torrent = torrentService.getTorrent(torrentId);
+    if (torrent) {
+      console.log(torrent.magnetURI);
+
+      return;
+    }
+    console.log(`No torrent found with ${torrentId} hash`);
   });
 
 program
@@ -63,6 +73,8 @@ program
   .description('Start seeding a new torrent.')
   .argument('<fileName>', 'filesystem path to file or folder')
   .action((fileName: string) => {
+    console.log('Preparing file for seeding...');
+
     const filePath = path.join(process.cwd(), 'assets', fileName);
     torrentService.seed(filePath);
   });
@@ -73,22 +85,21 @@ program
   .argument('<torrentId>', 'magnet link or info hash')
   .action(async(torrentId: string) => {
     const returned = torrentService.add(torrentId);
-    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-    bar.start(1,0)
+    await sleep(1000);
 
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar.start(100,0)
     const asyncInterval = new Promise<void>((resolve) => {
       const timer = setInterval(() => {
         const torrents = torrentService.getTorrents();
         var torrentInfo = torrents.map<TorrentInfo>(mapToInfo);
-        bar.update(torrentInfo[0].progress)
+        bar.update(Math.floor(torrentInfo[0].progress * 100))
         if (torrentInfo[0].progress == 1) {
-          bar.stop()
           resolve();
           clearInterval(timer)
         }
       }, 2000)  
     })
-
     await asyncInterval
 
   });
@@ -108,6 +119,8 @@ const run = async (input: string) => {
     }
   }
 };
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const customEval: REPLEval = async (uInput, context, filename, callback) => {
   callback(null, await run(uInput.trim()));

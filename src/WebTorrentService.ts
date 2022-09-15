@@ -46,7 +46,8 @@ const createWebTorrentService = () => {
   const add = (torrentId: AddInput) => {
     client.add(torrentId, {}, function ontorrent(torrent: WebTorrent.Torrent) {
       torrent.on('done', function () {
-        console.log('torrent finished downloading');
+        console.log('\n\n\n')
+        console.log('\ntorrent finished downloading');
         torrent.files.forEach(function (file) {
           console.log(file.path);
         });
